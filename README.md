@@ -1,26 +1,98 @@
-# Candidate kit
+# Employee Attendance & Analytics API
 
-Read in this order:
+A REST API built with FastAPI and MongoDB for employee attendance records and analytics.
 
-1. `PROBLEM_STATEMENT.docx`: what you are asked to do, how it is evaluated.
-2. `openapi.yaml`: the API contract and the business rules (R1 - R10).
-3. `DATA_MODEL.md`: what is stored in MongoDB, with nine sample documents.
-4. `app/main.py`: the starter. Put **all** your code in this one file. It must start with `uvicorn app.main:app --port 8000`.
-5. `REVIEW.md`, `DECISIONS.md`: templates to fill in.
+## Features
 
-`sample_data/` holds the nine sample documents as MongoDB Extended JSON; `sample_seed.py` loads them. The grader's dataset is
-much larger and contains cases they do not show.
+* List attendance records with filters and pagination.
+* Generate monthly attendance summaries for individual employees.
+* Summarize attendance metrics by department.
+* Rank employees by late attendance.
+* Generate department attendance trends over a date range.
+* Inspect MongoDB query execution plans through the admin explain endpoint.
 
-## Local setup
+## Requirements
+
+* Python 3.10 or newer
+* MongoDB 6.0 or newer
+
+## Setup
+
+Create and activate a virtual environment, then install the dependencies.
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env            # set MONGO_URI / MONGO_DB (local docker: docker run -p 27017:27017 mongo:7)
-python sample_seed.py
-uvicorn app.main:app --port 8000 --reload
+python -m venv .venv
 ```
-MongoDB **6.0 or newer** is required (the grader uses 7.0). MongoDB Atlas free tier (M0) works.
 
-## Submit
-A public Git repository with `app/main.py`, `requirements.txt`, `REVIEW.md`, `DECISIONS.md` and a short `README.md`.
-No `.env`, no secrets, no Dockerfile.
+On Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Configure the MongoDB connection using the environment variables expected by the application. Do not commit credentials or `.env` files to this repository.
+
+Load the sample data if your MongoDB configuration is ready:
+
+```bash
+python sample_seed.py
+```
+
+## Run the API
+
+Start the application with:
+
+```bash
+uvicorn app.main:app --port 8000
+```
+
+If port 8000 is already in use on your development machine, use port 8001 for local testing.
+
+## API documentation
+
+After starting the server, open:
+
+* Swagger UI: `http://127.0.0.1:8000/docs`
+* Health check: `http://127.0.0.1:8000/health`
+
+If running on port 8001, replace `8000` with `8001` in these URLs.
+
+## Admin explain endpoint
+
+The API provides an endpoint to inspect MongoDB execution statistics:
+
+```text
+/admin/explain/{endpoint}
+```
+
+Use Swagger UI to select an endpoint and supply its required query parameters.
+
+## Project structure
+
+```text
+app/
+  __init__.py
+  main.py
+requirements.txt
+openapi.yaml
+DATA_MODEL.md
+DECISIONS.md
+REVIEW.md
+PROBLEM_STATEMENT.docx
+sample_data/
+sample_seed.py
+```
+
+## Design notes and review
+
+See `DECISIONS.md` for implementation decisions and `REVIEW.md` for the solution review.
+
+## Repository
+
+Source code: https://github.com/rathod9141/employee-attendance-analytics-api
