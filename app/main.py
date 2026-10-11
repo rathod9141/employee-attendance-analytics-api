@@ -63,13 +63,16 @@ def parse_ms(value):
             status_code=422,
             detail="Timestamp must be an integer in epoch milliseconds",
         )
+
     if value < 100000000000 or value > 4102444800000:
         raise HTTPException(
             status_code=422,
             detail="Timestamp is outside the allowed range",
         )
+
     try:
-        return datetime.fromtimestamp(value / 1000, UTC)
+        timestamp_seconds = value // 1000
+        return datetime.fromtimestamp(timestamp_seconds, UTC)
     except (ValueError, OverflowError, OSError):
         raise HTTPException(status_code=422, detail="Invalid timestamp")
 
@@ -175,12 +178,20 @@ def attendance_shift_date(local_dt, employee):
     return day.isoformat()
 
 
-def compute_late_minutes(punch_in, shift_start):
+def compute_late_minutes(punch_in, shift_start, shift_end, attendance_day):
     local = as_utc(punch_in).astimezone(IST)
-    start = shift_start_datetime(local.date(), shift_start)
-    elapsed = int((local - start).total_seconds() // 60)
-    return elapsed if elapsed > 10 else 0
+    day = date.fromisoformat(attendance_day)
 
+    # For an overnight shift, use the previous day's start
+    # when the attendance date belongs to that overnight shift.
+    start = shift_start_datetime(day, shift_start)
+
+    elapsed_seconds = (local - start).total_seconds()
+
+    if elapsed_seconds <= 10 * 60:
+        return 0
+
+    return int(elapsed_seconds // 60)
 
 def compute_work_hours(punch_in, punch_out):
     seconds = (as_utc(punch_out) - as_utc(punch_in)).total_seconds()
@@ -223,8 +234,11 @@ def recompute_attendance(doc, employee):
     doc["punch_in"] = pin
     doc["punch_out"] = pout
     doc["late_minutes"] = compute_late_minutes(
-        pin, employee["shift_start"]
-    )
+    pin,
+    employee["shift_start"],
+    employee["shift_end"],
+    doc["date"],
+)
 
     if pout is None:
         doc["work_hours"] = None
@@ -439,8 +453,11 @@ def punch_in(body: PunchInIn):
         "punch_out": None,
         "work_hours": None,
         "late_minutes": compute_late_minutes(
-            punched_at, employee["shift_start"]
-        ),
+    punched_at,
+    employee["shift_start"],
+    employee["shift_end"],
+    attendance_date,
+),
         "overtime_minutes": 0,
         "half_day": False,
         "history": [],
@@ -895,29 +912,13 @@ def department_summary(
                             "present_days": {
                                 "$sum": {
                                     "$cond": [
-                                        {
-                                            "$and": [
-                                                {
-                                                    "$in": [
-                                                        "$status",
-                                                        list(PRESENCE_STATUSES),
-                                                    ]
-                                                },
-                                                {
-                                                    "$not": [
-                                                        {
-                                                            "$in": [
-                                                                {
-                                                                    "$dayOfWeek":
-                                                                        "$_parsed_date"
-                                                                },
-                                                                [1, 7],
-                                                            ]
-                                                        }
-                                                    ]
-                                                },
-                                            ]
-                                        },
+                                       
+{
+    "$in": [
+        "$status",
+        list(PRESENCE_STATUSES),
+    ]
+},
                                         {
                                             "$cond": [
                                                 {"$eq": ["$half_day", True]},
