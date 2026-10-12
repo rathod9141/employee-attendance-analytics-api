@@ -674,20 +674,34 @@ def patch_attendance(
     new_doc = recompute_attendance(new_doc, employee)
 
     changes = {}
-    for key in ("status", "punch_in", "punch_out"):
+
+    tracked_fields = (
+        "status",
+        "punch_in",
+        "punch_out",
+        "work_hours",
+        "late_minutes",
+        "overtime_minutes",
+        "half_day",
+    )
+
+    for key in tracked_fields:
         before = record.get(key)
         after = new_doc.get(key)
 
+        before_compare = before
+        after_compare = after
+
         if key in ("punch_in", "punch_out"):
-            before = as_utc(before)
-            after = as_utc(after)
+            before_compare = as_utc(before)
+            after_compare = as_utc(after)
 
-        if before != after:
+        if before_compare != after_compare:
             changes[key] = {
-                "before": record.get(key),
-                "after": new_doc.get(key),
+                "from": before,
+                "to": after,
             }
-
+        
     if not changes:
         raise HTTPException(
             status_code=422,
