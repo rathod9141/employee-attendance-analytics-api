@@ -105,7 +105,7 @@ Swagger UI lets you explore endpoints, provide query parameters, and test API re
 The API includes the following analytics endpoints:
 
 * `GET /attendance` — list attendance records with filtering and pagination.
-* `GET /analytics/employee/{emp_code}/monthly` — retrieve monthly attendance metrics for an employee.
+* `GET /analytics/employees/{emp_code}/monthly` — retrieve monthly attendance metrics for an employee.
 * `GET /analytics/departments/summary` — retrieve department attendance summaries.
 * `GET /analytics/leaderboard/late` — rank employees by late attendance.
 * `GET /analytics/departments/{department}/trend` — retrieve daily attendance trends for a department.
@@ -141,6 +141,18 @@ employee-attendance-analytics-api/
 ├── requirements.txt
 └── sample_seed.py
 ```
+
+## Performance Testing
+
+Run the performance test with MongoDB running and the project virtual environment activated:
+
+```bash
+python performance_test.py
+```
+
+The script creates a separate `attendance_perf_test` database with 1,000 employees and 100,000 attendance records. It creates indexes and checks query execution plans for collection scans.
+
+The script clears the employees and attendance_logs collections in `attendance_perf_test` before inserting test data. It does not clear the application's default `attendance_db` database.
 
 ## Design Notes and Review
 
