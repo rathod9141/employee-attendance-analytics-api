@@ -1373,15 +1373,27 @@ def department_trend(
                             ]
                         },
                         {
-                            "$round": [
-                                {
-                                    "$divide": [
-                                        "$present_count",
-                                        "$headcount",
-                                    ]
-                                },
-                                4,
+                            "$divide": [
+    {
+        "$floor": {
+            "$add": [
+                {
+                    "$multiply": [
+                        {
+                            "$divide": [
+                                "$present_count",
+                                "$headcount",
                             ]
+                        },
+                        10000,
+                    ]
+                },
+                0.5,
+            ]
+        }
+    },
+    10000,
+]
                         },
                         None,
                     ]
@@ -1414,8 +1426,24 @@ def department_trend(
                 "late_count": 1,
                 "attendance_rate": 1,
                 "moving_avg_7d": {
-                    "$round": ["$moving_avg_7d", 4]
+    "$cond": [
+        {"$ne": ["$moving_avg_7d", None]},
+        {
+            "$divide": [
+                {
+                    "$floor": {
+                        "$add": [
+                            {"$multiply": ["$moving_avg_7d", 10000]},
+                            0.5,
+                        ]
+                    }
                 },
+                10000,
+            ]
+        },
+        None,
+    ]
+},
             }
         },
         {"$sort": {"date": 1}},
@@ -2020,15 +2048,27 @@ def explain_endpoint(
                                 ]
                             },
                             {
-                                "$round": [
-                                    {
-                                        "$divide": [
-                                            "$present_count",
-                                            "$headcount",
-                                        ]
-                                    },
-                                    4,
-                                ]
+                                "$divide": [
+    {
+        "$floor": {
+            "$add": [
+                {
+                    "$multiply": [
+                        {
+                            "$divide": [
+                                "$present_count",
+                                "$headcount",
+                            ]
+                        },
+                        10000,
+                    ]
+                },
+                0.5,
+            ]
+        }
+    },
+    10000,
+]
                             },
                             None,
                         ]
@@ -2058,9 +2098,26 @@ def explain_endpoint(
                     "present_count": 1,
                     "late_count": 1,
                     "attendance_rate": 1,
-                    "moving_avg_7d": {
-                        "$round": ["$moving_avg_7d", 4]
-                    },
+                    
+"moving_avg_7d": {
+    "$cond": [
+        {"$ne": ["$moving_avg_7d", None]},
+        {
+            "$divide": [
+                {
+                    "$floor": {
+                        "$add": [
+                            {"$multiply": ["$moving_avg_7d", 10000]},
+                            0.5,
+                        ]
+                    }
+                },
+                10000,
+            ]
+        },
+        None,
+    ]
+},
                 }
             },
             {"$sort": {"date": 1}},
